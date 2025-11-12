@@ -1,0 +1,54 @@
+name: Fetch OpenRouter Free Models
+
+on:
+  schedule:
+    - cron: '0 6 * * *' # daily at 06:00 UTC
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.14'
+
+      - name: Install dependencies (prefer `uv`)
+        run: |
+          python -m pip install --upgrade pip
+          # Try to install uv (no-op if already installed); fall back to pip if uv isn't usable.
+          python -m pip install uv || true
+          if command -v uv >/dev/null 2>&1; then
+            uv sync
+          else
+            pip install -r requirements.txt
+          fi
+
+      - name: Run fetch script
+        env:
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+        run: python scripts/fetch_models.py
+
+      - name: Commit updated artifacts
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          # Stage the generated artifact (index.html). `git add` returns
+          # non-zero exit code if paths are missing, so allow it to fail without stopping.
+          git add docs/index.html || true
+          # If there are staged changes, commit and push them.
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "Update OpenRouter free models"
+            git push
+          fi
