@@ -17,6 +17,14 @@ jobs:
         with:
           persist-credentials: true
 
+      - name: Ensure latest `main` branch is checked out
+        run: |
+          echo "Fetching latest 'main' from origin and resetting working tree"
+          git fetch origin main --quiet || true
+          # Try to check out 'main' (create if missing), then reset to remote main
+          git checkout main 2>/dev/null || git checkout -b main
+          git reset --hard origin/main
+
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
