@@ -41,10 +41,19 @@ jobs:
             pip install -r requirements.txt
           fi
 
-      - name: Run fetch script
+      - name: Run fetch script (use venv created by `uv`)
         env:
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
-        run: python scripts/fetch_models.py
+        run: |
+          # If uv created a .venv, use its Python to ensure installed deps are available.
+          if [ -x .venv/bin/python ]; then
+            echo "Running with .venv/bin/python"
+            .venv/bin/python scripts/fetch_models.py
+          else
+            # Fall back to system Python (should only happen if uv didn't create a venv)
+            echo ".venv not found — running system python"
+            python scripts/fetch_models.py
+          fi
 
       - name: Commit updated artifacts
         run: |
