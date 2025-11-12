@@ -55,10 +55,8 @@ jobs:
 
           # If uv is installed, prefer `uv run` which executes within the created env
           if command -v uv >/dev/null 2>&1; then
-            echo "uv detected — running 'uv run python -c \"import sys;print(sys.executable)\"' to show interpreter";
-            uv run python -c "import sys, pkgutil
-print('interpreter:', sys.executable)
-print('openai module found:', pkgutil.find_loader('openai') is not None)" || true
+            echo "uv detected — checking interpreter and openai presence"
+            uv run python -c "import sys,pkgutil;print('interpreter:',sys.executable);print('openai module found:', pkgutil.find_loader('openai') is not None)" || true
             echo "Running fetch script via uv run"
             uv run python scripts/fetch_models.py
             exit_code=$?
