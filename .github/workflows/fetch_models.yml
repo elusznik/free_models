@@ -41,19 +41,45 @@ jobs:
             pip install -r requirements.txt
           fi
 
-      - name: Run fetch script (use venv created by `uv`)
+      - name: Run fetch script (use uv/.venv; debug if missing)
         env:
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
         run: |
-          # If uv created a .venv, use its Python to ensure installed deps are available.
-          if [ -x .venv/bin/python ]; then
-            echo "Running with .venv/bin/python"
-            .venv/bin/python scripts/fetch_models.py
-          else
-            # Fall back to system Python (should only happen if uv didn't create a venv)
-            echo ".venv not found — running system python"
-            python scripts/fetch_models.py
+          echo "Workspace: $GITHUB_WORKSPACE"
+          echo "PWD: $(pwd)"
+          echo "Listing top-level files:"; ls -la || true
+
+          # Show python info and any installed openai package for visibility
+          echo "System python: $(which python || true)";
+          python -V || true
+
+          # If uv is installed, prefer `uv run` which executes within the created env
+          if command -v uv >/dev/null 2>&1; then
+            echo "uv detected — running 'uv run python -c \"import sys;print(sys.executable)\"' to show interpreter";
+            uv run python -c "import sys, pkgutil
+print('interpreter:', sys.executable)
+print('openai module found:', pkgutil.find_loader('openai') is not None)" || true
+            echo "Running fetch script via uv run"
+            uv run python scripts/fetch_models.py
+            exit_code=$?
+            echo "uv run exit: $exit_code"
+            if [ $exit_code -eq 0 ]; then
+              exit 0
+            fi
           fi
+
+          # If uv not available or uv run failed, check for .venv python
+          if [ -x .venv/bin/python ]; then
+            echo ".venv python found — show openai info"
+            .venv/bin/python -m pip show openai || true
+            .venv/bin/python scripts/fetch_models.py
+            exit 0
+          fi
+
+          # Last resort: run with system python (also show whether openai is installed)
+          echo "Falling back to system python — show pip show openai"
+          python -m pip show openai || true
+          python scripts/fetch_models.py
 
       - name: Commit updated artifacts
         run: |
