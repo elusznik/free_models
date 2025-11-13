@@ -22,7 +22,6 @@ import logging
 import math
 import os
 import sys
-import time
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
@@ -42,12 +41,12 @@ except Exception:
     log.error("Missing dependency 'requests'. Install with: pip install -r requirements.txt")
     raise
 
-from concurrent.futures import ThreadPoolExecutor, as_completed
+# no longer using per-model concurrent fetches; single index fetch is used
 
 # Config for artificialanalysis.ai (update endpoint if AA publishes a different path)
 AA_API_KEY_ENV = "ARTIFICIALANALYSIS_API_KEY"
-AA_API_BASE = "https://api.artificialanalysis.ai"  # adjust if their docs show a different base
-AA_SCORE_ENDPOINT = AA_API_BASE + "/v1/models/{aa_id}/scores?metrics=overall"
+AA_API_BASE = "https://artificialanalysis.ai"
+AA_MODELS_ENDPOINT = AA_API_BASE + "/api/v2/data/llms/models"
 
 AA_MAP_PATH = Path("scripts/aa_model_map.json")
 
@@ -130,63 +129,107 @@ def find_aa_id_for_model(model: dict[str, Any], aa_map: dict[str, str]) -> str |
     return None
 
 
-def fetch_aa_overall(aa_id: str, api_key: str) -> float | None:
-    """Fetch overall score from artificialanalysis.ai for aa_id.
+def fetch_all_aa_models(api_key: str) -> dict[str, dict]:
+    """Fetch the AA LLM models index and return a case-insensitive lookup.
 
-    Returns numeric score or None.
+    Returns a dict mapping lowercased id/slug/name -> full AA model dict.
     """
-    if not aa_id or not api_key:
+    if not api_key:
+        return {}
+    url = AA_MODELS_ENDPOINT
+    headers = {"x-api-key": api_key}
+    try:
+        resp = requests.get(url, headers=headers, timeout=REQUEST_TIMEOUT)
+        if resp.status_code != 200:
+            log.warning("AA models endpoint returned %s: %s", resp.status_code, resp.text[:200])
+            return {}
+        payload = resp.json()
+        items = payload.get("data") or []
+        index: dict[str, dict] = {}
+        for m in items:
+            # index by stable identifiers
+            for key in (m.get("id"), m.get("slug"), m.get("name")):
+                if key:
+                    lk = str(key).lower()
+                    if lk not in index:
+                        index[lk] = m
+        return index
+    except requests.RequestException as e:
+        log.warning("Failed to fetch AA models: %s", e)
+        return {}
+
+
+def extract_overall_from_evaluations(evals: dict) -> float | None:
+    """Extract a sensible 'overall' score from an AA evaluations object.
+
+    Prefers the `artificial_analysis_intelligence_index` field, then tries a
+    small set of fallbacks and finally any numeric value found.
+    """
+    if not isinstance(evals, dict):
         return None
-    url = AA_SCORE_ENDPOINT.format(aa_id=aa_id)
-    headers = {"Authorization": f"Bearer {api_key}"}
-    for attempt in range(1, RETRY_ATTEMPTS + 1):
+    # preferred keys (as observed in the docs)
+    preferred = ("artificial_analysis_intelligence_index", "artificial_analysis_overall", "overall")
+    for k in preferred:
+        if k in evals:
+            try:
+                return float(evals[k])
+            except Exception:
+                pass
+    # fallback: find any numeric-looking value
+    for v in evals.values():
         try:
-            resp = requests.get(url, headers=headers, timeout=REQUEST_TIMEOUT)
-            if resp.status_code == 200:
-                data = resp.json()
-                # tolerant parsing for a few likely shapes:
-                # { "overall": 95.3 }
-                # { "scores": { "overall": 95.3 } }
-                # { "metrics": [ { "name": "overall", "value": 95.3 }, ... ] }
-                if isinstance(data, dict):
-                    if "overall" in data:
-                        try:
-                            return float(data["overall"])
-                        except Exception:
-                            pass
-                    scores = data.get("scores")
-                    if isinstance(scores, dict) and "overall" in scores:
-                        try:
-                            return float(scores["overall"])
-                        except Exception:
-                            pass
-                    metrics = data.get("metrics")
-                    if isinstance(metrics, list):
-                        for m in metrics:
-                            try:
-                                if isinstance(m, dict) and str(m.get("name", "")).lower() == "overall":
-                                    return float(m.get("value"))
-                            except Exception:
-                                continue
-                # if response is a simple number
-                try:
-                    return float(data)
-                except Exception:
-                    pass
-                return None
-            elif resp.status_code in (429, 502, 503, 504):
-                sleep = (RETRY_BACKOFF_BASE ** attempt)
-                time.sleep(sleep)
+            fv = float(v)
+            if not math.isnan(fv):
+                return fv
+        except Exception:
+            continue
+    return None
+
+
+def find_aa_data_for_model(model: dict[str, Any], aa_map: dict[str, str], aa_index: dict[str, dict]) -> dict | None:
+    """Find the AA model dict for an OpenRouter model using mapping or heuristics.
+
+    Returns the AA model dict or None.
+    """
+    candidates: list[str] = []
+    if model.get("id"):
+        candidates.append(str(model.get("id")))
+    name = model.get("name")
+    if name:
+        candidates.append(str(name))
+    raw = model.get("raw", {}) or {}
+    display_name = raw.get("display_name")
+    if display_name:
+        candidates.append(str(display_name))
+
+    # Check mapping first (case-insensitive key lookup)
+    for orig in candidates:
+        key = orig.lower()
+        if key in aa_map:
+            mapped = aa_map[key]
+            if not mapped:
                 continue
-            else:
-                # non-retryable error - log and return None
-                log.warning("AA API returned status %s for id %s: %s", resp.status_code, aa_id, resp.text[:200])
-                return None
-        except requests.RequestException as e:
-            sleep = (RETRY_BACKOFF_BASE ** attempt)
-            log.warning("request error for AA id %s attempt %s: %s; sleeping %.1fs", aa_id, attempt, e, sleep)
-            time.sleep(sleep)
-    log.error("failed to fetch AA score for %s after retries", aa_id)
+            mk = str(mapped).lower()
+            if mk in aa_index:
+                return aa_index[mk]
+
+    # Direct match against AA index keys (id/slug/name)
+    for orig in candidates:
+        lk = orig.lower()
+        if lk in aa_index:
+            return aa_index[lk]
+
+    # Heuristic substring match against name/slug
+    for orig in candidates:
+        lo = orig.lower()
+        for aa_model in aa_index.values():
+            try:
+                if lo == str(aa_model.get("name", "")).lower() or lo == str(aa_model.get("slug", "")).lower():
+                    return aa_model
+                if lo in str(aa_model.get("name", "")).lower() or lo in str(aa_model.get("slug", "")).lower():
+                    return aa_model
+            except Exception:
+                continue
     return None
 
 
@@ -339,33 +382,26 @@ def main() -> None:
     if not aa_api_key:
         log.info("ARTIFICIALANALYSIS_API_KEY not set: generating index without AA scores")
 
-    # Map models to AA ids (guess when possible)
-    for m in models:
-        aa_id = find_aa_id_for_model(m, aa_map)
-        m["aa_id"] = aa_id
-
-    # Fetch AA scores concurrently when we have an API key
+    # Fetch AA model index once and map entries to our models
+    aa_index: dict[str, dict] = {}
     if aa_api_key:
-        to_fetch = {m["aa_id"] for m in models if m.get("aa_id")}
-        # Use mapping from aa_id -> future
-        with ThreadPoolExecutor(max_workers=MAX_WORKERS) as ex:
-            futures = {ex.submit(fetch_aa_overall, aa_id, aa_api_key): aa_id for aa_id in to_fetch}
-            aa_scores: dict[str, float | None] = {}
-            for fut in as_completed(futures):
-                aaid = futures[fut]
-                try:
-                    score = fut.result()
-                    aa_scores[aaid] = score
-                    log.info("Fetched AA score for %s: %s", aaid, score)
-                except Exception as exc:
-                    aa_scores[aaid] = None
-                    log.warning("Error fetching AA score for %s: %s", aaid, exc)
+        aa_index = fetch_all_aa_models(aa_api_key)
+        if not aa_index:
+            log.warning("Failed to fetch AA models index or index is empty")
 
-        # assign scores back to models
-        for m in models:
-            aaid = m.get("aa_id")
-            if aaid:
-                m["aa_overall"] = aa_scores.get(aaid)
+    for m in models:
+        # Prefer found AA model data when we have an index
+        aa_data = find_aa_data_for_model(m, aa_map, aa_index) if aa_index else None
+        if aa_data:
+            aa_id = aa_data.get("id") or aa_data.get("slug")
+            m["aa_id"] = aa_id
+            m["aa_overall"] = extract_overall_from_evaluations(aa_data.get("evaluations") or {})
+            log.info("Mapped %s -> AA %s score=%s", m.get("id"), aa_id, m.get("aa_overall"))
+        else:
+            # Fallback: preserve previous mapping/guess behaviour (no HTTP call)
+            aa_id_guess = find_aa_id_for_model(m, aa_map)
+            if aa_id_guess:
+                m["aa_id"] = aa_id_guess
 
     def is_valid_score(m: dict[str, Any]) -> bool:
         v = m.get("aa_overall")
