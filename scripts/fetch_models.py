@@ -16,11 +16,13 @@ Optionally place a JSON mapping at scripts/aa_model_map.json with shape:
 
 If no mapping exists, the script will attempt to use openrouter model id as the AA id as a guess.
 """
+import difflib
 import html
 import json
 import logging
 import math
 import os
+import re
 import sys
 from datetime import UTC, datetime
 from pathlib import Path
@@ -49,6 +51,9 @@ AA_API_BASE = "https://artificialanalysis.ai"
 AA_MODELS_ENDPOINT = AA_API_BASE + "/api/v2/data/llms/models"
 
 AA_MAP_PATH = Path("scripts/aa_model_map.json")
+
+# If set to '1', enable more verbose AA matching logs
+DEBUG_AA_MATCH = os.getenv("DEBUG_AA_MATCH", "0") == "1"
 
 REQUEST_TIMEOUT = 10
 RETRY_ATTEMPTS = 4
@@ -211,25 +216,68 @@ def find_aa_data_for_model(model: dict[str, Any], aa_map: dict[str, str], aa_ind
                 continue
             mk = str(mapped).lower()
             if mk in aa_index:
+                if DEBUG_AA_MATCH:
+                    log.info("AA mapping matched %s -> %s", orig, mk)
                 return aa_index[mk]
 
     # Direct match against AA index keys (id/slug/name)
     for orig in candidates:
         lk = orig.lower()
         if lk in aa_index:
+            if DEBUG_AA_MATCH:
+                log.info("Direct key match %s -> %s", orig, lk)
             return aa_index[lk]
 
-    # Heuristic substring match against name/slug
+    # Normalized exact match (remove punctuation/whitespace)
+    def _norm(s: str) -> str:
+        return re.sub(r"[^a-z0-9]+", "", s.lower())
+
+    cand_norms = [_norm(c) for c in candidates if c]
+    for aa_model in aa_index.values():
+        try:
+            name = str(aa_model.get("name", ""))
+            slug = str(aa_model.get("slug", ""))
+            aid = str(aa_model.get("id", ""))
+            name_n = _norm(name)
+            slug_n = _norm(slug)
+            aid_n = _norm(aid)
+            for cn in cand_norms:
+                if cn and (cn == name_n or cn == slug_n or cn == aid_n):
+                    if DEBUG_AA_MATCH:
+                        log.info("Normalized match %s -> %s", cn, aa_model.get("id"))
+                    return aa_model
+        except Exception as exc:
+            log.debug("Normalization error for AA model: %s", exc)
+
+    # Substring match against name/slug
     for orig in candidates:
         lo = orig.lower()
         for aa_model in aa_index.values():
             try:
                 if lo == str(aa_model.get("name", "")).lower() or lo == str(aa_model.get("slug", "")).lower():
+                    if DEBUG_AA_MATCH:
+                        log.info("Exact name/slug match %s -> %s", orig, aa_model.get("id"))
                     return aa_model
                 if lo in str(aa_model.get("name", "")).lower() or lo in str(aa_model.get("slug", "")).lower():
+                    if DEBUG_AA_MATCH:
+                        log.info("Substring match %s -> %s", orig, aa_model.get("id"))
                     return aa_model
-            except Exception:
-                continue
+            except Exception as exc:
+                log.debug("Substring match error: %s", exc)
+
+    # Fuzzy match using difflib against AA index keys
+    aa_keys = list(aa_index.keys())
+    for orig in candidates:
+        try:
+            matches = difflib.get_close_matches(orig.lower(), aa_keys, n=1, cutoff=0.75)
+            if matches:
+                mkey = matches[0]
+                if DEBUG_AA_MATCH:
+                    log.info("Fuzzy match %s -> %s", orig, mkey)
+                return aa_index[mkey]
+        except Exception as exc:
+            log.debug("Fuzzy match error: %s", exc)
+
     return None
 
 
