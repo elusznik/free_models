@@ -18,7 +18,7 @@
     <main>
       <h1>OpenRouter — Zero-Cost Models (sorted by artificialanalysis.ai overall score)</h1>
       <p class="lead">A live listing of zero-cost models surfaced from OpenRouter, enhanced with artificialanalysis.ai scores when available.</p>
-      <div class="muted">Generated: 2026-02-13T07:09:02.679563Z</div>
+      <div class="muted">Generated: 2026-02-14T06:57:50.209229Z</div>
       <ul class="models-list">
         <li class="model">
           <h3>Arcee AI: Trinity Large Preview (free)</h3>
@@ -252,6 +252,17 @@ The model&#x27;s reasoning capabilities can be controlled via a system prompt. I
         
 
         <li class="model">
+          <h3>Qwen: Qwen3 235B A22B Thinking 2507</h3>
+          <div class="meta">qwen/qwen3-235b-a22b-thinking-2507 <span class="badge zero">zero-cost</span></div>
+          <p>Qwen3-235B-A22B-Thinking-2507 is a high-performance, open-weight Mixture-of-Experts (MoE) language model optimized for complex reasoning tasks. It activates 22B of its 235B parameters per forward pass and natively supports up to 262,144 tokens of context. This &quot;thinking-only&quot; variant enhances structured logical reasoning, mathematics, science, and long-form generation, showing strong benchmark performance across AIME, SuperGPQA, LiveCodeBench, and MMLU-Redux. It enforces a special reasoning mode (&lt;/think&gt;) and is designed for high-token outputs (up to 81,920 tokens) in challenging domains.
+
+The model is instruction-tuned and excels at step-by-step reasoning, tool use, agentic workflows, and multilingual tasks. This release represents the most capable open-source variant in the Qwen3-235B series, surpassing many closed models in structured reasoning use cases.</p>
+          <div class="meta">pricing: prompt=0 completion=0</div>
+          <div class="meta">AA id: qwen/qwen3-235b-a22b-thinking-2507 — score: -</div>
+        </li>
+        
+
+        <li class="model">
           <h3>Qwen: Qwen3 4B (free)</h3>
           <div class="meta">qwen/qwen3-4b:free <span class="badge zero">zero-cost</span> <span class="badge free">:free</span></div>
           <p>Qwen3-4B is a 4 billion parameter dense language model from the Qwen3 series, designed to support both general-purpose and reasoning-intensive tasks. It introduces a dual-mode architecture—thinking and non-thinking—allowing dynamic switching between high-precision logical reasoning and efficient dialogue generation. This makes it well-suited for multi-turn chat, instruction following, and complex agent workflows.</p>
@@ -308,45 +319,6 @@ Beyond analysis, Qwen3-VL supports agentic interaction and tool use: it can foll
           <p>Step 3.5 Flash is StepFun&#x27;s most capable open-source foundation model. Built on a sparse Mixture of Experts (MoE) architecture, it selectively activates only 11B of its 196B parameters per token. It is a reasoning model that is incredibly speed efficient even at long contexts.</p>
           <div class="meta">pricing: prompt=0 completion=0</div>
           <div class="meta">AA id: stepfun/step-3.5-flash:free — score: -</div>
-        </li>
-        
-
-        <li class="model">
-          <h3>TNG: DeepSeek R1T Chimera (free)</h3>
-          <div class="meta">tngtech/deepseek-r1t-chimera:free <span class="badge zero">zero-cost</span> <span class="badge free">:free</span></div>
-          <p>DeepSeek-R1T-Chimera is created by merging DeepSeek-R1 and DeepSeek-V3 (0324), combining the reasoning capabilities of R1 with the token efficiency improvements of V3. It is based on a DeepSeek-MoE Transformer architecture and is optimized for general text generation tasks.
-
-The model merges pretrained weights from both source models to balance performance across reasoning, efficiency, and instruction-following tasks. It is released under the MIT license and intended for research and commercial use.</p>
-          <div class="meta">pricing: prompt=0 completion=0</div>
-          <div class="meta">AA id: tngtech/deepseek-r1t-chimera:free — score: -</div>
-        </li>
-        
-
-        <li class="model">
-          <h3>TNG: DeepSeek R1T2 Chimera (free)</h3>
-          <div class="meta">tngtech/deepseek-r1t2-chimera:free <span class="badge zero">zero-cost</span> <span class="badge free">:free</span></div>
-          <p>DeepSeek-TNG-R1T2-Chimera is the second-generation Chimera model from TNG Tech. It is a 671 B-parameter mixture-of-experts text-generation model assembled from DeepSeek-AI’s R1-0528, R1, and V3-0324 checkpoints with an Assembly-of-Experts merge. The tri-parent design yields strong reasoning performance while running roughly 20 % faster than the original R1 and more than 2× faster than R1-0528 under vLLM, giving a favorable cost-to-intelligence trade-off. The checkpoint supports contexts up to 60 k tokens in standard use (tested to ~130 k) and maintains consistent &lt;think&gt; token behaviour, making it suitable for long-context analysis, dialogue and other open-ended generation tasks.</p>
-          <div class="meta">pricing: prompt=0 completion=0</div>
-          <div class="meta">AA id: tngtech/deepseek-r1t2-chimera:free — score: -</div>
-        </li>
-        
-
-        <li class="model">
-          <h3>TNG: R1T Chimera (free)</h3>
-          <div class="meta">tngtech/tng-r1t-chimera:free <span class="badge zero">zero-cost</span> <span class="badge free">:free</span></div>
-          <p>TNG-R1T-Chimera is an experimental LLM with a faible for creative storytelling and character interaction. It is a derivate of the original TNG/DeepSeek-R1T-Chimera released in April 2025 and is available exclusively via Chutes and OpenRouter.
-
-Characteristics and improvements include:
-
-We think that it has a creative and pleasant personality.
-It has a preliminary EQ-Bench3 value of about 1305.
-It is quite a bit more intelligent than the original, albeit a slightly slower.
-It is much more think-token consistent, i.e. reasoning and answer blocks are properly delineated.
-Tool calling is much improved.
-
-TNG Tech, the model authors, ask that users follow the careful guidelines that Microsoft has created for their &quot;MAI-DS-R1&quot; DeepSeek-based model. These guidelines are available on Hugging Face (https://huggingface.co/microsoft/MAI-DS-R1).</p>
-          <div class="meta">pricing: prompt=0 completion=0</div>
-          <div class="meta">AA id: tngtech/tng-r1t-chimera:free — score: -</div>
         </li>
         
 
