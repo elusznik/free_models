@@ -18,7 +18,7 @@
     <main>
       <h1>OpenRouter — Zero-Cost Models (sorted by artificialanalysis.ai overall score)</h1>
       <p class="lead">A live listing of zero-cost models surfaced from OpenRouter, enhanced with artificialanalysis.ai scores when available.</p>
-      <div class="muted">Generated: 2026-03-11T07:05:12.651117Z</div>
+      <div class="muted">Generated: 2026-03-12T07:06:34.723360Z</div>
       <ul class="models-list">
         <li class="model">
           <h3>Arcee AI: Trinity Large Preview (free)</h3>
@@ -95,6 +95,28 @@ The architecture natively supports very long context windows up to 512k tokens, 
 This model supports a wide linguistic range (trained in over 140 languages) and features a flexible 32K token context window. Gemma 3n can selectively load parameters, optimizing memory and computational efficiency based on the task or device capabilities, making it well-suited for privacy-focused, offline-capable applications and on-device AI solutions. [Read more in the blog post](https://developers.googleblog.com/en/introducing-gemma-3n/)</p>
           <div class="meta">pricing: prompt=0 completion=0</div>
           <div class="meta">AA id: google/gemma-3n-e4b-it:free — score: -</div>
+        </li>
+        
+
+        <li class="model">
+          <h3>Healer Alpha</h3>
+          <div class="meta">openrouter/healer-alpha <span class="badge zero">zero-cost</span></div>
+          <p>Healer Alpha is a frontier omni-modal model with vision, hearing, reasoning, and action capabilities. It brings the full power of agentic intelligence into the real world: natively perceiving visual and audio inputs, reasoning across modalities, and executing complex multi-step tasks with precision and reliability.
+
+**Note:** All prompts and completions for this model are logged by the provider and may be used to improve the model.</p>
+          <div class="meta">pricing: prompt=0 completion=0</div>
+          <div class="meta">AA id: openrouter/healer-alpha — score: -</div>
+        </li>
+        
+
+        <li class="model">
+          <h3>Hunter Alpha</h3>
+          <div class="meta">openrouter/hunter-alpha <span class="badge zero">zero-cost</span></div>
+          <p>Hunter Alpha is a 1 Trillion parameter + 1M token context frontier intelligence model built for agentic use. It excels at long-horizon planning, complex reasoning, and sustained multi-step task execution, with the reliability and instruction-following precision that frameworks like OpenClaw need.
+
+**Note:** All prompts and completions for this model are logged by the provider and may be used to improve the model.</p>
+          <div class="meta">pricing: prompt=0 completion=0</div>
+          <div class="meta">AA id: openrouter/hunter-alpha — score: -</div>
         </li>
         
 
@@ -182,6 +204,19 @@ security.</p>
         
 
         <li class="model">
+          <h3>NVIDIA: Nemotron 3 Super (free)</h3>
+          <div class="meta">nvidia/nemotron-3-super-120b-a12b:free <span class="badge zero">zero-cost</span> <span class="badge free">:free</span></div>
+          <p>NVIDIA Nemotron 3 Super is a 120B-parameter open hybrid MoE model, activating just 12B parameters for maximum compute efficiency and accuracy in complex multi-agent applications. Built on a hybrid Mamba-Transformer Mixture-of-Experts architecture with multi-token prediction (MTP), it delivers over 50% higher token generation compared to leading open models.
+ 
+The model features a 1M token context window for long-term agent coherence, cross-document reasoning, and multi-step task planning. Latent MoE enables calling 4 experts for the inference cost of only one, improving intelligence and generalization. Multi-environment RL training across 10+ environments delivers leading accuracy on benchmarks including AIME 2025, TerminalBench, and SWE-Bench Verified.
+ 
+Fully open with weights, datasets, and recipes under the NVIDIA Open License, Nemotron 3 Super allows easy customization and secure deployment anywhere — from workstation to cloud.</p>
+          <div class="meta">pricing: prompt=0 completion=0</div>
+          <div class="meta">AA id: nvidia/nemotron-3-super-120b-a12b:free — score: -</div>
+        </li>
+        
+
+        <li class="model">
           <h3>NVIDIA: Nemotron Nano 12B 2 VL (free)</h3>
           <div class="meta">nvidia/nemotron-nano-12b-v2-vl:free <span class="badge zero">zero-cost</span> <span class="badge free">:free</span></div>
           <p>NVIDIA Nemotron Nano 2 VL is a 12-billion-parameter open multimodal reasoning model designed for video understanding and document intelligence. It introduces a hybrid Transformer-Mamba architecture, combining transformer-level accuracy with Mamba’s memory-efficient sequence modeling for significantly higher throughput and lower latency.
@@ -253,26 +288,6 @@ Pricing for the Alibaba endpoints varies by context length. Once a request is gr
 The model employs scaling-efficient training and decoding to improve parameter efficiency and inference speed, and has been validated on a broad set of public benchmarks where it reaches or approaches larger Qwen3 systems in several categories while outperforming earlier mid-sized baselines. It is best used as a general assistant, code helper, and long-context task solver in production settings where deterministic, instruction-following outputs are preferred.</p>
           <div class="meta">pricing: prompt=0 completion=0</div>
           <div class="meta">AA id: qwen/qwen3-next-80b-a3b-instruct:free — score: -</div>
-        </li>
-        
-
-        <li class="model">
-          <h3>Qwen: Qwen3 VL 235B A22B Thinking</h3>
-          <div class="meta">qwen/qwen3-vl-235b-a22b-thinking <span class="badge zero">zero-cost</span></div>
-          <p>Qwen3-VL-235B-A22B Thinking is a multimodal model that unifies strong text generation with visual understanding across images and video. The Thinking model is optimized for multimodal reasoning in STEM and math. The series emphasizes robust perception (recognition of diverse real-world and synthetic categories), spatial understanding (2D/3D grounding), and long-form visual comprehension, with competitive results on public multimodal benchmarks for both perception and reasoning.
-
-Beyond analysis, Qwen3-VL supports agentic interaction and tool use: it can follow complex instructions over multi-image, multi-turn dialogues; align text to video timelines for precise temporal queries; and operate GUI elements for automation tasks. The models also enable visual coding workflows, turning sketches or mockups into code and assisting with UI debugging, while maintaining strong text-only performance comparable to the flagship Qwen3 language models. This makes Qwen3-VL suitable for production scenarios spanning document AI, multilingual OCR, software/UI assistance, spatial/embodied tasks, and research on vision-language agents.</p>
-          <div class="meta">pricing: prompt=0 completion=0</div>
-          <div class="meta">AA id: qwen/qwen3-vl-235b-a22b-thinking — score: -</div>
-        </li>
-        
-
-        <li class="model">
-          <h3>Qwen: Qwen3 VL 30B A3B Thinking</h3>
-          <div class="meta">qwen/qwen3-vl-30b-a3b-thinking <span class="badge zero">zero-cost</span></div>
-          <p>Qwen3-VL-30B-A3B-Thinking is a multimodal model that unifies strong text generation with visual understanding for images and videos. Its Thinking variant enhances reasoning in STEM, math, and complex tasks. It excels in perception of real-world/synthetic categories, 2D/3D spatial grounding, and long-form visual comprehension, achieving competitive multimodal benchmark results. For agentic use, it handles multi-image multi-turn instructions, video timeline alignments, GUI automation, and visual coding from sketches to debugged UI. Text performance matches flagship Qwen3 models, suiting document AI, OCR, UI assistance, spatial tasks, and agent research.</p>
-          <div class="meta">pricing: prompt=0 completion=0</div>
-          <div class="meta">AA id: qwen/qwen3-vl-30b-a3b-thinking — score: -</div>
         </li>
         
 
